@@ -1,0 +1,240 @@
+name: Form Sender
+
+on:
+  repository_dispatch:
+    types: [form_sender_task, form_sender_test, form_sender_branch_test]
+  workflow_dispatch:
+    inputs:
+      targeting_id:
+        description: 'Targeting ID for form sender'
+        required: true
+        default: '1'
+        type: string
+      test_mode:
+        description: 'Run in test mode'
+        required: false
+        default: true
+        type: boolean
+      client_config:
+        description: 'Client configuration JSON'
+        required: true
+        type: string
+      use_extra_table:
+        description: 'Use companies_extra/send_queue_extra instead of defaults'
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  form-sender:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    if: github.event.action != 'form_sender_branch_test'
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        ref: ${{ github.event.client_payload.branch || github.ref }}
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Cache Python dependencies
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install setproctitle  # マルチプロセス名設定用
+        
+    - name: Cache Playwright browsers
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/ms-playwright
+        key: ${{ runner.os }}-ms-playwright-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-ms-playwright-
+
+    - name: Install Playwright browsers
+      run: |
+        playwright install chromium
+        sudo apt-get update || true
+        sudo apt-get install -y --no-install-recommends libglib2.0-0 libnss3 libatk-bridge2.0-0 libdrm2 libxcomposite1 libxdamage1 libxrandr2 libgbm1 libxss1 libasound2t64 || true
+
+    - name: Save client config to temporary file
+      run: |
+        python src/save_client_config.py
+
+    - name: Determine execution mode and worker count
+      run: |
+        normalize_use_extra_flag() {
+          local raw="$1"
+          raw=$(printf '%s' "$raw" | tr '[:upper:]' '[:lower:]')
+          raw=$(printf '%s' "$raw" | tr -d '"')
+          raw=${raw//\'/}
+          case "$raw" in
+            true|1|yes) echo "true" ;;
+            false|0|no|''|null) echo "false" ;;
+            *) echo "false" ;;
+          esac
+        }
+
+        if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+          echo "TEST_MODE=${{ github.event.inputs.test_mode }}" >> $GITHUB_ENV
+          echo "TARGETING_ID=${{ github.event.inputs.targeting_id }}" >> $GITHUB_ENV
+          # workflow_dispatchではNUM_WORKERSは未指定のため、既定値4を使用
+          RAW_NUM_WORKERS="4"
+          echo "Running via WORKFLOW DISPATCH: targeting_id=${{ github.event.inputs.targeting_id }}, test_mode=${{ github.event.inputs.test_mode }}"
+          # Table Selection (workflow_dispatch)
+          RAW_USE_EXTRA="${{ toJson(github.event.inputs.use_extra_table) }}"
+          USE_EXTRA=$(normalize_use_extra_flag "${RAW_USE_EXTRA}")
+          echo "Payload use_extra_table (workflow_dispatch) raw=${RAW_USE_EXTRA}, normalized=${USE_EXTRA}"
+          if [ "${USE_EXTRA}" = "true" ]; then
+            echo "COMPANY_TABLE=companies_extra" >> $GITHUB_ENV
+            echo "SEND_QUEUE_TABLE=send_queue_extra" >> $GITHUB_ENV
+          else
+            echo "COMPANY_TABLE=companies" >> $GITHUB_ENV
+            echo "SEND_QUEUE_TABLE=send_queue" >> $GITHUB_ENV
+          fi
+        elif [ "${{ github.event.action }}" = "form_sender_test" ]; then
+          echo "TEST_MODE=true" >> $GITHUB_ENV
+          echo "TARGETING_ID=1" >> $GITHUB_ENV
+          RAW_NUM_WORKERS="${{ (github.event.client_payload.execution && github.event.client_payload.execution.workers_per_workflow) || github.event.client_payload.workers_per_workflow || 4 }}"
+          echo "Running in TEST MODE with targeting_id=1"
+          # From payload if present
+          RAW_USE_EXTRA="${{ toJson((github.event.client_payload.tables && github.event.client_payload.tables.use_extra_table) || github.event.client_payload.use_extra_table || false) }}"
+          USE_EXTRA=$(normalize_use_extra_flag "${RAW_USE_EXTRA}")
+          echo "Payload use_extra_table (form_sender_test) raw=${RAW_USE_EXTRA}, normalized=${USE_EXTRA}"
+          if [ "${USE_EXTRA}" = "true" ]; then
+            echo "COMPANY_TABLE=companies_extra" >> $GITHUB_ENV
+            echo "SEND_QUEUE_TABLE=send_queue_extra" >> $GITHUB_ENV
+          else
+            echo "COMPANY_TABLE=${{ (github.event.client_payload.tables && github.event.client_payload.tables.company_table) || github.event.client_payload.company_table || 'companies' }}" >> $GITHUB_ENV
+            echo "SEND_QUEUE_TABLE=${{ (github.event.client_payload.tables && github.event.client_payload.tables.send_queue_table) || github.event.client_payload.send_queue_table || 'send_queue' }}" >> $GITHUB_ENV
+          fi
+        else
+          echo "TEST_MODE=false" >> $GITHUB_ENV
+          echo "TARGETING_ID=${{ github.event.client_payload.targeting_id }}" >> $GITHUB_ENV
+          RAW_NUM_WORKERS="${{ (github.event.client_payload.execution && github.event.client_payload.execution.workers_per_workflow) || github.event.client_payload.workers_per_workflow || 4 }}"
+          echo "Running in PRODUCTION MODE"
+          RAW_USE_EXTRA="${{ toJson((github.event.client_payload.tables && github.event.client_payload.tables.use_extra_table) || github.event.client_payload.use_extra_table || false) }}"
+          USE_EXTRA=$(normalize_use_extra_flag "${RAW_USE_EXTRA}")
+          echo "Payload use_extra_table (repository_dispatch) raw=${RAW_USE_EXTRA}, normalized=${USE_EXTRA}"
+          if [ "${USE_EXTRA}" = "true" ]; then
+            echo "COMPANY_TABLE=companies_extra" >> $GITHUB_ENV
+            echo "SEND_QUEUE_TABLE=send_queue_extra" >> $GITHUB_ENV
+          else
+            echo "COMPANY_TABLE=${{ (github.event.client_payload.tables && github.event.client_payload.tables.company_table) || github.event.client_payload.company_table || 'companies' }}" >> $GITHUB_ENV
+            echo "SEND_QUEUE_TABLE=${{ (github.event.client_payload.tables && github.event.client_payload.tables.send_queue_table) || github.event.client_payload.send_queue_table || 'send_queue' }}" >> $GITHUB_ENV
+          fi
+        fi
+
+        # 1〜4 にクランプ（非数値・範囲外は安全側で4）
+        case "$RAW_NUM_WORKERS" in
+          1|2|3|4) NUM_WORKERS="$RAW_NUM_WORKERS" ;;
+          *) NUM_WORKERS="4" ;;
+        esac
+        echo "NUM_WORKERS=$NUM_WORKERS" >> $GITHUB_ENV
+
+        # シャードIDを計算（Repository Dispatch の並列起動時）。send_queue作成時の既定shards=8に準拠
+        if [ "${{ github.event_name }}" != "workflow_dispatch" ]; then
+          RI="${{ (github.event.client_payload.execution && github.event.client_payload.execution.run_index) || github.event.client_payload.run_index || '' }}"
+          if [ -n "$RI" ]; then
+            SHARDS="${{ (github.event.client_payload.execution && github.event.client_payload.execution.shards) || github.event.client_payload.shards || 8 }}"
+            if ! echo "$SHARDS" | grep -Eq '^[0-9]+$' || [ "$SHARDS" -le 0 ]; then SHARDS=8; fi
+            # run_indexは1始まりとして扱う
+            SI=$(( (RI - 1) % SHARDS ))
+            echo "Computed SHARD_ID=$SI from run_index=$RI / shards=$SHARDS"
+            echo "SHARD_ID=$SI" >> $GITHUB_ENV
+          fi
+        fi
+
+    - name: Run Form Sender Runner (Queue-driven workers)
+      id: worker
+      run: |
+        echo "Starting multi-process form sender worker..."
+        echo "System resources initialized"
+        echo "Worker configuration loaded"
+        if [ "${{ env.TEST_MODE }}" = "true" ]; then
+          echo "Executing in TEST MODE"
+          if [ -n "${SHARD_ID}" ]; then SHARD_ARG="--shard-id ${SHARD_ID}"; else SHARD_ARG=""; fi
+          python src/form_sender_runner.py \
+            --targeting-id "${{ env.TARGETING_ID }}" \
+            --config-file "/tmp/client_config_*.json" \
+            --num-workers "${NUM_WORKERS}" \
+            ${SHARD_ARG}
+        else
+          echo "Executing in PRODUCTION MODE"
+          if [ -n "${SHARD_ID}" ]; then SHARD_ARG="--shard-id ${SHARD_ID}"; else SHARD_ARG=""; fi
+          python src/form_sender_runner.py \
+            --targeting-id "${{ env.TARGETING_ID }}" \
+            --config-file "/tmp/client_config_*.json" \
+            --num-workers "${NUM_WORKERS}" \
+            ${SHARD_ARG}
+        fi
+      env:
+        PYTHONPATH: ${{ github.workspace }}/src
+        SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+        SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        COMPANY_TABLE: ${{ env.COMPANY_TABLE }}
+        SEND_QUEUE_TABLE: ${{ env.SEND_QUEUE_TABLE }}
+        TZ: Asia/Tokyo
+        # マルチプロセス環境設定
+        GITHUB_ACTIONS: true
+        # プロセス管理最適化
+        PYTHONFAULTHANDLER: 1
+        PYTHONUNBUFFERED: 1
+
+    - name: Cleanup config file
+      run: rm -f /tmp/client_config_*.json
+      if: always()
+
+    - name: Summary
+      if: always()
+      run: |
+        echo "## Form Sender Processing Results" >> $GITHUB_STEP_SUMMARY
+        echo "- **Status**: ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
+
+  # ブランチテスト用軽量実行ジョブ
+  branch-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    if: github.event.action == 'form_sender_branch_test'
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        ref: ${{ github.event.client_payload.branch || github.ref }}
+
+    - name: Branch Test Information
+      run: |
+        echo "## Branch Test Information" >> $GITHUB_STEP_SUMMARY
+        echo "- **Event Type**: ${{ github.event.action }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Requested Branch**: ${{ github.event.client_payload.branch }}" >> $GITHUB_STEP_SUMMARY  
+        echo "- **Actual Branch**: ${{ github.ref }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Targeting ID**: ${{ github.event.client_payload.targeting_id }}" >> $GITHUB_STEP_SUMMARY
+        # 企業名・URLは出力禁止（CIポリシー）。必要最小限のIDのみを表示。
+        
+    - name: Verify Branch Checkout
+      run: |
+        echo "Current branch: $(git branch --show-current)"
+        echo "Current commit: $(git rev-parse HEAD)"
+        echo "Branch files check:"
+        ls -la src/form_sender/
+        
+    - name: Branch Test Summary
+      run: |
+        echo "✅ ブランチテスト完了"
+        echo "Repository Dispatch機能が正常に動作しています"
+        echo "ブランチ: ${{ github.event.client_payload.branch }}"
+        echo "実行ブランチの確認が完了しました"
