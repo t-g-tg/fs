@@ -1,0 +1,34 @@
+# GitHub Actions Worker Dependencies
+# 最小限の依存関係のみ（セキュリティとパフォーマンス重視）
+
+# Web scraping
+requests==2.31.0
+beautifulsoup4==4.12.2
+lxml==4.9.3
+
+# Browser automation (JavaScript必須サイト対応)
+playwright==1.40.0
+# Stealth evasion for Playwright (bot/protection回避用)
+# playwright-stealth 2.x introduces Stealth().use_async/apply_stealth_async API.
+# 1.0.6 以降は旧API（stealth_async/sync）が提供されるため、コード側で両対応しています。
+playwright-stealth>=1.0.6,<3
+tldextract==3.4.4  # eTLD+1 判定（サブドメインを第一者として扱うため）
+
+# HTTP client - Supabaseとの互換性を考慮
+aiohttp==3.9.0
+httpx==0.24.1
+
+# Database - httpxとの互換性確保
+supabase==2.0.0
+
+# AI/LLM API client
+groq>=0.13.0
+
+# JSON/Data handling
+jsonschema==4.19.2
+
+# Utilities
+python-dateutil==2.8.2
+python-dotenv==1.0.0
+psutil==5.9.6  # プロセス管理（リソースクリーンアップ用）
+setproctitle==1.3.6  # プロセス名設定（マルチプロセス管理用）
