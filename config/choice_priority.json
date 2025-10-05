@@ -1,0 +1,31 @@
+{
+  "checkbox": {
+    "primary_keywords": ["営業", "提案", "メール", "法人"],
+    "secondary_keywords": ["その他", "一般", "other", "該当なし"],
+    "tertiary_keywords": ["問い合わせ", "問合"],
+    "privacy_keywords": [
+      "プライバシー", "プライバシーポリシー", "個人情報", "個人情報保護",
+      "個人情報の取り扱い", "個人情報の取扱い", "privacy", "privacy policy",
+      "利用規約", "terms", "terms of service"
+    ],
+    "agree_tokens": ["同意", "承諾", "agree", "同意する", "確認の上", "に同意"],
+    "select_all_when_group_required": true,
+    "max_group_select": 8
+  },
+  "radio": {
+    "primary_keywords": ["営業", "提案", "メール", "法人"],
+    "secondary_keywords": ["その他", "一般", "other", "該当なし"],
+    "tertiary_keywords": ["問い合わせ", "問合"],
+    "gender": {
+      "male": ["男", "男性", "male"],
+      "female": ["女", "女性", "female"],
+      "other": ["その他", "other"]
+    }
+  },
+  "select": {
+    "exclude_keywords": [
+      "選択", "選択してください", "ご選択", "お選び", "お選びください", "選んで", "選んでください",
+      "choose", "please choose", "select", "please select", "未選択", "---", "—", "–"
+    ]
+  }
+}

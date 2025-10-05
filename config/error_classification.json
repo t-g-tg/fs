@@ -1,0 +1,13 @@
+{
+  "_comment": "エラー分類の追加パターン。ここに追記しても動作に影響しない（未設定OK）。",
+  "extra_patterns": {
+    "RATE_LIMIT": [
+      "(?i)throttled",
+      "(?i)リクエストが多すぎます"
+    ],
+    "WAF_CHALLENGE": [
+      "(?i)attention required\s*\|\s*cloudflare",
+      "(?i)shield|bot manager|web application firewall"
+    ]
+  }
+}

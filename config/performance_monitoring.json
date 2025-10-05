@@ -1,0 +1,74 @@
+{
+  "memory_thresholds": {
+    "warning_mb": 1024,
+    "critical_mb": 2048
+  },
+  "cpu_thresholds": {
+    "warning_percent": 80.0,
+    "critical_percent": 95.0
+  },
+  "monitoring_intervals": {
+    "base_interval": 30.0,
+    "low_load": 60.0,
+    "normal_load": 30.0,
+    "high_load": 10.0,
+    "critical_load": 5.0,
+    "enable_dynamic": true
+  },
+  "load_level_thresholds": {
+    "low_utilization_max": 0.4,
+    "normal_utilization_max": 0.7,
+    "high_utilization_max": 0.9
+  },
+  "gc_monitoring": {
+    "alert_threshold": 10,
+    "monitoring_period": 30
+  },
+  "history_management": {
+    "max_metrics_history": 1000,
+    "load_level_history_size": 5,
+    "min_measurements_for_adjustment": 3
+  },
+  "buffer_management": {
+    "backpressure_levels": {
+      "level_1_threshold": 0.8,
+      "level_2_threshold": 0.9,
+      "level_3_threshold": 0.95,
+      "level_4_threshold": 1.0
+    },
+    "overflow_buffer": {
+      "max_overflow_size": 1000,
+      "emergency_file_prefix": "emergency_overflow",
+      "cleanup_after_hours": 24
+    }
+  },
+  "process_management": {
+    "termination_verification": {
+      "max_wait_seconds": 30,
+      "check_interval_seconds": 0.5,
+      "zombie_cleanup_enabled": true,
+      "fd_leak_detection": true,
+      "proc_status_verification": true,
+      "sigchld_handler_enabled": true
+    },
+    "worker_limits": {
+      "max_workers": 4,
+      "worker_timeout_seconds": 300,
+      "restart_threshold_failures": 3
+    }
+  },
+  "worker_resilience": {
+    "fetch_detail": {
+      "max_consecutive_failures": 5,
+      "max_fatal_error_ratio": 0.8,
+      "retry_delay_seconds": 2.0,
+      "max_retries": 3
+    },
+    "form_sender": {
+      "max_consecutive_failures": 3,
+      "max_fatal_error_ratio": 0.7,
+      "retry_delay_seconds": 1.5,
+      "max_retries": 2
+    }
+  }
+}

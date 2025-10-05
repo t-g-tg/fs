@@ -1,0 +1,51 @@
+{
+    "environment_variables": {
+        "SUPABASE_URL": {
+            "required": true,
+            "min_length": 20,
+            "url_prefix": "https://",
+            "error_msg": "SUPABASE_URL must be a valid Supabase project URL"
+        },
+        "SUPABASE_SERVICE_ROLE_KEY": {
+            "required": true,
+            "min_length": 100,
+            "key_prefix": "eyJ",
+            "error_msg": "SUPABASE_SERVICE_ROLE_KEY must be a valid service role key"
+        },
+        "GITHUB_ACTIONS": {
+            "required": false,
+            "allowed_values": ["true", "false"],
+            "error_msg": "GITHUB_ACTIONS must be true or false"
+        }
+    },
+    "form_sender": {
+        "max_workers": {
+            "type": "integer",
+            "min_value": 1,
+            "max_value": 10,
+            "default": 2
+        },
+        "batch_size": {
+            "type": "integer", 
+            "min_value": 1,
+            "max_value": 100,
+            "default": 10
+        },
+        "max_execution_time_hours": {
+            "type": "integer",
+            "min_value": 1,
+            "max_value": 12,
+            "default": 5
+        }
+    },
+    "security": {
+        "log_sanitization_enabled": {
+            "type": "boolean",
+            "default": true
+        },
+        "github_actions_enhanced_masking": {
+            "type": "boolean",
+            "default": true
+        }
+    }
+}

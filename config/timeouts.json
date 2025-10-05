@@ -1,0 +1,14 @@
+{
+  "timeouts": {
+    "page_load_wait": 3000,
+    "ajax_processing_wait": 3000,
+    "form_submission_wait": 5000,
+    "confirmation_page_wait": 3000,
+    "dom_mutation_wait": 8000,
+    "auto_exit_fallback": 8000
+  },
+  "retry_settings": {
+    "button_detection_retries": 3,
+    "selector_fallback_timeout": 3000
+  }
+}

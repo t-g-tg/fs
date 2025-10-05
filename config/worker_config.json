@@ -1,0 +1,266 @@
+{
+  "worker": {
+    "timeout_seconds": 300,
+    "max_retries": 3,
+    "batch_processing": {
+      "max_items_per_batch": 20,
+      "concurrent_tasks": 3
+    }
+  },
+  "_comment_form_sender": "Form-Sender用マルチプロセス設定（重いフォーム送信処理に最適化）",
+  "_comment_form_sender_priority": "設定優先順位: form_sender_multi_process専用設定を使用、フォールバック無し",
+  "form_sender_multi_process": {
+    "num_workers": 3,
+    "github_actions_workers": 3,
+    "max_workers": 3,
+    "worker_startup_timeout": 60,
+    "worker_shutdown_timeout": 30,
+    "heartbeat_interval": 90,
+    "_comment_health_check": "統一間隔（運用効率向上）",
+    "health_check_interval": 90,
+    "batch_size": 12,
+    "max_pending_tasks": 90,
+    "task_timeout": 300,
+    "result_collection_timeout": 30,
+    "_comment_memory": "Form-Sender: 3GB/ワーカー - Playwright重DOM操作 + Bot保護回避処理 + フォーム送信 + 長時間セッション維持",
+    "memory_per_worker_mb": 3072,
+    "db_batch_writing": {
+      "batch_size": 100,
+      "buffer_timeout_seconds": 120,
+      "max_buffer_size": 200,
+      "retry_backoff_base": 2,
+      "retry_backoff_max_seconds": 60,
+      "max_parallel_writes": 5
+    }
+  },
+  "form_sender": {
+    "timeout_settings": {
+      "page_load": 15000,
+      "element_wait": 15000,
+      "click_timeout": 5000,
+      "input_timeout": 5000,
+      "post_input_delay_ms": 200,
+      "pre_processing_max": 30000,
+      "dynamic_message_wait": 15000,
+      "dom_monitoring": 8000,
+      "javascript_execution": 10000
+    },
+    "text_processing": {
+      "escape_sequences": {
+        "\\n": "\n",
+        "\\t": "\t",
+        "\\r": "\r",
+        "\\\\": "\\",
+        "\\\"": "\"",
+        "\\'": "'"
+      },
+      "target_fields": ["message", "subject"],
+      "enable_nested_processing": true,
+      "max_nesting_depth": 1
+    },
+    "state_change_judgment": {
+      "dom_change_threshold": 5,
+      "form_clear_ratio": 0.5,
+      "success_url_patterns": [
+        "/thanks", "/thank-you", "/complete", "/completed", "/done", 
+        "/submitted", "/success", "/confirm", "/confirmation",
+        "/kanryou", "/uketsuke", "/arigatou"
+      ],
+      "failure_url_patterns": [
+        "/error", "/failed", "/failure", "/invalid"
+      ],
+      "success_title_patterns": [
+        "完了", "成功", "ありがとう", "thank", "complete", "success", "受付"
+      ],
+      "failure_title_patterns": [
+        "エラー", "失敗", "無効", "error", "failed", "invalid"
+      ],
+      "success_query_params": [
+        "success", "completed", "submitted"
+      ],
+      "failure_query_params": [
+        "error", "failed", "invalid"
+      ]
+    }
+  },
+  "form_explorer": {
+    "max_pages_per_site": 6,
+    "site_timeout": 90,
+    "min_link_score": 100,
+    "popup_wait": 500,
+    "page_load_timeout": 30000,
+    "network_idle_timeout": 3000,
+    "max_pages_per_depth": 6,
+    "max_additional_links": 1000,
+    "max_depth1_collection": 6,
+    "default_dom_index": 999999
+  },
+  "database": {
+    "max_retries": 6,
+    "retry_delay": 1.0
+  },
+  "browser": {
+    "resource_blocking": {
+      "block_images": true,
+      "block_fonts": true,
+      "block_stylesheets": false
+    },
+    "stealth": {
+      "enabled": true,
+      "languages": ["ja-JP", "ja"]
+    },
+    "cookie_control": {
+      "block_cmp_scripts": true,
+      "strip_set_cookie": true,
+      "strip_set_cookie_third_party_only": true,
+      "strip_set_cookie_domains": [],
+      "strip_set_cookie_exclude_domains": [
+        "cloudflare.com",
+        "recaptcha.net",
+        "google.com",
+        "gstatic.com",
+        "hcaptcha.com"
+      ],
+      "override_document_cookie": false,
+      "ui_reject_banners": true
+    }
+  },
+  "groq": {
+    "max_tokens": 4096
+  },
+  "output": {
+    "result_format": "json",
+    "include_debug_info": false,
+    "compression": false
+  },
+  "logging": {
+    "level": "INFO", 
+    "include_timestamps": true,
+    "max_log_lines": 1000
+  },
+  "business_metrics": {
+    "form_discovery_rate": {
+      "warning_threshold": 20.0,
+      "good_threshold": 50.0,
+      "excellent_threshold": 75.0
+    },
+    "reporting": {
+      "include_discovery_rate": true,
+      "include_business_status": true,
+      "separate_technical_business_metrics": true
+    }
+  },
+  "error_handling": {
+    "capture_stack_traces": true,
+    "include_error_context": true,
+    "max_error_details": 5
+  },
+  "performance": {
+    "memory_limit_mb": 1024,
+    "cpu_limit_percent": 80,
+    "network_timeout_seconds": 30
+  },
+  "runner": {
+    "backoff_initial": 2,
+    "backoff_max": 60,
+    "success_count_cache_seconds": 5,
+    "backoff_jitter_ratio": 0.2,
+    "classify_cache_max_size": 256,
+    "classify_cache_ttl_sec": 600,
+    "requeue_interval_seconds": 60,
+    "requeue_stale_minutes": 5,
+    "idle_exit_seconds": 900,
+    "_comment_shard_strategy": "大量並列時の空シャード対策（全シャードプローブ + シャードローテーション）",
+    "shard_num": 8,
+    "shard_rotation_enabled": true,
+    "shard_no_work_probe_seconds": 45,
+    "shard_unsharded_probe_attempts": 1,
+    "shard_rotation_strategy": "sequential",
+    "_comment_name_policy": "企業名にこれらの語を含む場合は送信対象外（Form-Senderで二重確認）",
+    "name_policy_exclude_keywords": [
+      "医療法人",
+      "病院",
+      "法律事務所",
+      "弁護士",
+      "税理士",
+      "弁理士",
+      "学校"
+    ]
+  },
+  "detectors": {
+    "prohibition": {
+      "default_missing_confidence": 0.8,
+      "fast_precheck_enabled": false,
+      "early_abort": {
+        "min_level": "mild",
+        "min_confidence_level": "medium",
+        "min_score": 70,
+        "min_matches": 1
+      }
+    }
+  },
+  "storage": {
+    "sanitize_max_depth": 6
+  },
+  "final_submit": {
+    "confirmation_extra_wait_ms": 2000,
+    "_comment": "確認ページでの最終送信後に余裕を持って待機する追加ミリ秒（描画・遷移の安定化）"
+  },
+  "_comment_form_finder": "Form-Finder用マルチプロセス設定（軽量フォーム探索処理に最適化）",
+  "_comment_form_finder_priority": "設定優先順位: form_finder_multi_process専用設定を使用、フォールバックは旧multi_process設定",
+  "form_finder_multi_process": {
+    "num_workers": 3,
+    "github_actions_workers": 3,
+    "max_workers": 3,
+    "worker_startup_timeout": 60,
+    "worker_shutdown_timeout": 30,
+    "_comment_health_unified": "統一間隔（運用効率向上）",
+    "health_check_interval": 90,
+    "batch_size": 15,
+    "max_pending_tasks": 75,
+    "_comment_task_timeout": "ワーカー負荷50%増加に対応（180→240秒、十分な安全余裕）",
+    "task_timeout": 240,
+    "result_collection_timeout": 30,
+    "_comment_batch_timeout": "バッチ処理全体のタイムアウト：250件処理に対応（40分＝2400秒）",
+    "batch_processing_timeout": 2400,
+    "_comment_finder_memory": "Form-Finder: 2GB/ワーカー - 軽量DOM解析 + 短時間セッション + 読み取り専用処理 (Form-Senderの67%)",
+    "memory_per_worker_mb": 2048,
+    "worker_recovery": {
+      "enable_auto_recovery": false,
+      "max_recovery_attempts": 2,
+      "recovery_backoff_seconds": 5
+    },
+    "result_buffering": {
+      "enable_buffering": false,
+      "buffer_size": 20,
+      "buffer_timeout_seconds": 30
+    }
+  },
+  "_comment_resource": "リソース検証とモニタリング設定（GitHub Actions 4コア16GB環境対応）",
+  "resource_validation": {
+    "_comment_memory_limit": "16GB の 89% (安全マージン11%確保)",
+    "max_total_memory_mb": 14336,
+    "_comment_cpu_limit": "CPU制限: 4コア中3コア使用、1コア予約",
+    "max_total_workers": 3,
+    "_comment_startup": "起動時検証を有効化",
+    "validate_on_startup": true,
+    "memory_calculation": {
+      "form_sender_total": "3_workers_x_3072MB_plus_3GB_system",
+      "form_finder_total": "3_workers_x_2048MB_plus_3GB_system"
+    }
+  },
+  "_comment_performance": "パフォーマンス監視設定",
+  "performance_monitoring": {
+    "_comment_cpu_threshold": "CPU使用率警告閾値",
+    "cpu_usage_threshold": 80,
+    "_comment_memory_threshold": "メモリ使用率警告閾値",
+    "memory_usage_threshold": 85,
+    "worker_health_check_enabled": true,
+    "resource_exhaustion_detection": {
+      "enabled": true,
+      "check_interval_seconds": 30,
+      "_comment_spike_threshold": "メモリスパイク検出閾値",
+      "memory_spike_threshold": 95
+    }
+  }
+}

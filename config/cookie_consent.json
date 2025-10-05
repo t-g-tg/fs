@@ -1,0 +1,94 @@
+{
+  "prefer_reject": false,
+  "max_wait_ms": 7000,
+  "attempt_interval_ms": 300,
+  "selectors": {
+    "reject": [
+      "#onetrust-reject-all-handler",
+      ".ot-pc-refuse-all-handler",
+      "button.ot-pc-refuse-all-handler",
+      "#CybotCookiebotDialogBodyButtonDecline",
+      "#qc-cmp2-reject-all",
+      "button#didomi-notice-disagree-button",
+      "#truste-consent-required-dismiss",
+      "#cookie_action_close_header_reject",
+      "#cookie_settings_reject",
+      "#cky-reject",
+      ".iubenda-cs-reject-btn",
+      "#sp-cc-reject",
+      "button[aria-label*='reject' i]",
+      "button:has-text('Reject all')",
+      "button:has-text('Reject All')",
+      "button:has-text('Only necessary')",
+      "button:has-text('Use necessary')"
+    ],
+    "accept": [
+      "#onetrust-accept-btn-handler",
+      ".ot-pc-accept-all-handler",
+      "#CybotCookiebotDialogBodyButtonAccept",
+      "#qc-cmp2-accept-all",
+      "#didomi-notice-agree-button",
+      "#truste-consent-button",
+      "#cookie_action_close_header",
+      "#cky-accept",
+      ".iubenda-cs-accept-btn",
+      "button[aria-label*='accept' i]",
+      "button:has-text('Accept All')",
+      "button:has-text('Accept all')"
+    ],
+    "manage": [
+      "#onetrust-pc-btn-handler",
+      "#ot-sdk-btn-optanon",
+      ".qc-cmp2-summary-buttons .qc-cmp2-summary-button[mode='settings']",
+      "button:has-text('Manage preferences')",
+      "button:has-text('Options')",
+      "#CybotCookiebotDialogBodyButtonPreferences"
+    ],
+    "save": [
+      ".save-preference-btn-handler",
+      ".ot-pc-save-handler",
+      ".qc-cmp2-save-and-exit",
+      ".qc-cmp2-footer .save-and-exit",
+      "button:has-text('Save and exit')",
+      "button:has-text('Save choices')",
+      "button:has-text('Confirm my choices')"
+    ],
+    "containers": [
+      "#onetrust-banner-sdk",
+      "#onetrust-pc-sdk",
+      "#CybotCookiebotDialog",
+      "#qc-cmp2-ui",
+      "#didomi-host",
+      "#truste-consent-track",
+      "#cookie-law-info-bar",
+      "#cky-consent",
+      ".iubenda-cs-container",
+      "div[id^='sp_message_container']",
+      ".sp_message_container",
+      ".sp_veil",
+      ".osano-cm-window"
+    ],
+    "iframes": [
+      "iframe[title*='privacy' i]",
+      "iframe[src*='consent' i]",
+      "iframe[id*='sp_message' i]",
+      "iframe[src*='quantcast' i]",
+      "iframe[src*='didomi' i]",
+      "iframe[src*='onetrust' i]",
+      "iframe[src*='cookiebot' i]"
+    ]
+  },
+  "text_patterns": {
+    "reject": [
+      "拒否", "拒否する", "同意しない", "不許可",
+      "必要なものだけ", "必要不可欠",
+      "Decline", "Deny", "Reject", "Reject all", "Only necessary", "Use necessary",
+      "Tout refuser", "Alle ablehnen", "Rechazar todas", "Rifiuta tutto"
+    ],
+    "accept": [
+      "同意", "許可", "すべて許可", "全て許可", "全て受け入れる",
+      "Accept", "Agree", "Allow", "Accept All",
+      "Tout accepter", "Alle akzeptieren", "Aceptar todo", "Accetta tutto"
+    ]
+  }
+}

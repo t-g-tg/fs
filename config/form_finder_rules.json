@@ -1,0 +1,73 @@
+{
+  "recruitment_only_exclusion": {
+    "exclude_if_keywords_present_any": [
+      "学歴",
+      "大学",
+      "出身",
+      "経歴"
+    ],
+    "allow_if_general_contact_keywords_any": [
+      "お問い合わせ",
+      "お問合せ",
+      "問い合わせ",
+      "contact",
+      "inquiry",
+      "ご相談",
+      "連絡"
+    ]
+  },
+  "link_exclusions": {
+    "exclude_if_text_or_url_contains_any": [
+      "採用",
+      "求人",
+      "応募",
+      "募集",
+      "エントリー",
+      "recruit",
+      "recruitment",
+      "career",
+      "careers",
+      "job",
+      "jobs",
+      "employment",
+      "comment-form",
+      "commentform",
+      "wp-comment",
+      "wp-comments",
+      "#comment",
+      "#respond",
+      "leave a reply",
+      "post comment",
+      "コメントを送信",
+      "コメント投稿",
+      "コメントする"
+    ]
+  },
+  "comment_form_exclusion": {
+    "exclude_if_keywords_present_any": [
+      "コメントを送信",
+      "コメントする",
+      "コメント投稿",
+      "Leave a Reply",
+      "Post Comment"
+    ],
+    "exclude_if_form_attributes_contains_any": [
+      "commentform",
+      "comment-form",
+      "comment-submit",
+      "commenttextarea",
+      "comment-textarea",
+      "comment-author",
+      "comment-url",
+      "reply-form",
+      "respond",
+      "wp-comment",
+      "wp-comments"
+    ]
+  },
+  "form_validation": {
+    "ng_keywords_any": [
+      "学校"
+    ]
+  }
+}
